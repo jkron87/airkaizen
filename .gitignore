@@ -1,0 +1,51 @@
+# Editor temporary files
+**~
+reports-functional/
+work/
+
+
+# Editor config files
+*.iml
+*.ipr
+/.idea
+*.iws
+.settings
+.project
+.classpath
+/target-eclipse/
+*.swp
+
+
+# Generated files
+logs
+stacktrace.log
+/*.log
+/cobertura.ser
+.DS_Store
+/plugin.xml
+/build/
+/out/
+/web-app/plugins
+/web-app/WEB-INF/classes
+Thumbs.db
+TAGS
+plugins/external-config-reload-1.2.2-modified/plugin.xml
+plugins/**/target
+dump.rdb
+/target/
+/*.zip
+classes/
+test/javascripts/coverage
+.asscache
+.slcache/
+*.pem
+
+# Modules
+**/*/.gradle
+**/*/build
+**/*/out
+
+# Dev files
+.gradle
+
+.gradletasknamecache
