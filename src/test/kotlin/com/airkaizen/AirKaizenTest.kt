@@ -1,7 +1,6 @@
 package com.airkaizen
 
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
+import junit.framework.Assert.*
 import org.junit.Before
 import org.junit.Test
 
@@ -15,7 +14,7 @@ class AirKaizenTest {
 
     @Test
     fun addRouteCorrectlyAddsRouteAndListsCities() {
-        airKaizen.addRoute("Chicago", "Detroit", "KZ05")
+        airKaizen.addRoute("Chicago", "Detroit", "NewCode")
         val cities = airKaizen.listCities()
 
         assertTrue(cities!!.contains("Detroit"))
@@ -23,54 +22,62 @@ class AirKaizenTest {
 
     @Test
     fun getRoutesReturnsDirectFlight() {
-        airKaizen.addRoute("Chicago", "Detroit", "KZ05")
-        val flights = airKaizen.findRoutes("Chicago", "Detroit")
+        airKaizen.addRoute("Chicago", "New City", "KZ05")
+
+        val flights = airKaizen.findRoutes("New City", "Chicago", 2)
 
         assertTrue(flights.contains(listOf("KZ05")))
     }
 
     @Test
     fun getRoutesHandlesNoRoutesCase() {
-        val flights = airKaizen.findRoutes("Traverse City", "Detroit")
+        val flights = airKaizen.findRoutes("Chicago", "Mackinac Island", 0)
         assertTrue(flights.isEmpty())
     }
 
     @Test
     fun getRoutesHandlesCitiesNotInNetwork() {
-        val flights = airKaizen.findRoutes("Invalid city", "Another invalid city")
+        val flights = airKaizen.findRoutes("Invalid city", "Another Invalid City", 2)
         assertTrue(flights.isEmpty())
     }
 
     @Test
     fun getRoutesHandlesBidirectionality() {
-        val forwards = airKaizen.findRoutes("Grand Rapids", "Chicago")
-        val backwards = airKaizen.findRoutes("Grand Rapids", "Chicago")
+        val forwards = airKaizen.findRoutes("Grand Rapids", "Chicago", 2)
+        val backwards = airKaizen.findRoutes("Grand Rapids", "Chicago", 2)
 
         assertEquals(forwards, backwards)
     }
 
     @Test
-    fun getRoutesReturnsMoreThanOnePossibleRoute() {
-        val flights = airKaizen.findRoutes("Chicago", "Mackinac Island")
-
-        assertTrue(flights.contains(listOf("KZ01", "KZ04")))
-        assertTrue(flights.contains(listOf("KZ02", "KZ03")))
-    }
-
-
-    @Test
     fun getRoutesHandlesBidirectionalityOfMoreThanOnePossibleRoute() {
-        val flights = airKaizen.findRoutes("Mackinac Island", "Chicago")
+        val flightsOutbound = airKaizen.findRoutes("Mackinac Island", "Chicago", 2)
 
-        assertTrue(flights.contains(listOf("KZ04", "KZ01")))
-        assertTrue(flights.contains(listOf("KZ03", "KZ02")))
+        assertTrue(flightsOutbound.contains(listOf("KZ04", "KZ01")))
+        assertTrue(flightsOutbound.contains(listOf("KZ03", "KZ02")))
+
+        val flightsInbound = airKaizen.findRoutes("Chicago", "Mackinac Island", 2)
+
+
+        assertTrue(flightsInbound.contains(listOf("KZ01", "KZ04")))
+        assertTrue(flightsInbound.contains(listOf("KZ02", "KZ03")))
     }
 
     @Test
-    fun getRoutesDoesNotReturnRoutesWithMoreThanTwoLegs() {
-        airKaizen.addRoute("Mackinac Island", "Bois Blanc Island", "KZ06")
-        val flights = airKaizen.findRoutes("Chicago", "Bois Blanc Island")
+    fun getRoutesHandlesMaxNumberOfLayovers() {
+        airKaizen.addRoute("Chicago", "Connecting City", "KZ05")
+        airKaizen.addRoute("Grand Rapids", "Connecting City", "KZ06")
+        val flightsWithMaxTwoLayovers = airKaizen.findRoutes("Chicago", "Grand Rapids", 1)
 
-        assertTrue(flights.isEmpty())
+        assertTrue(flightsWithMaxTwoLayovers.contains(listOf("KZ01")))
+        assertTrue(flightsWithMaxTwoLayovers.contains(listOf("KZ05", "KZ06")))
+        assertFalse(flightsWithMaxTwoLayovers.contains(listOf("KZ02", "KZ03", "KZ04")))
+
+        val flightsWithMaxThreeLayovers = airKaizen.findRoutes("Chicago", "Grand Rapids", 2)
+
+        assertTrue(flightsWithMaxThreeLayovers.contains(listOf("KZ01")))
+        assertTrue(flightsWithMaxThreeLayovers.contains(listOf("KZ05", "KZ06")))
+        assertTrue(flightsWithMaxThreeLayovers.contains(listOf("KZ02", "KZ03", "KZ04")))
     }
+
 }

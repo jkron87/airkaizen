@@ -3,11 +3,12 @@ package com.airkaizen
 import com.google.common.graph.MutableNetwork
 import com.google.common.graph.NetworkBuilder
 import java.util.*
-import kotlin.collections.ArrayList
+
 
 class AirKaizen {
 
     val flightNetwork: MutableNetwork<String, String> = NetworkBuilder.undirected().build()
+    private val allRoutes: MutableSet<List<String>> = hashSetOf()
 
     init {
         createMutableNetwork()
@@ -29,34 +30,63 @@ class AirKaizen {
         return flightNetwork.nodes()
     }
 
-    fun findRoutes(departing: String, arriving: String): MutableSet<List<String>> {
-        val routes = mutableSetOf<List<String>>()
+    fun findRoutes(city1: String, city2: String, maxLayovers: Int): MutableSet<List<String>> {
+        val isVisited = mutableMapOf<String, Boolean>()
+        val pathList = ArrayList<String>()
+        val tempRoutes = ArrayList<String>()
 
-        val directRouteConnecting: Optional<String>?
+        pathList.add(city1)
 
-        try {
-            directRouteConnecting = flightNetwork.edgeConnecting(departing, arriving)
+        findAllRoutesRecursively(city1, city2, isVisited, pathList, tempRoutes, maxLayovers)
+        return allRoutes
+    }
+
+    private fun findAllRoutesRecursively(
+        departing: String, arriving: String,
+        isVisited: MutableMap<String, Boolean>,
+        cityPath: MutableList<String>,
+        route: MutableList<String>,
+        maxLayovers: Int
+    ): MutableSet<List<String>> {
+
+        isVisited[departing] = true
+
+        if (route.size > maxLayovers && cityPath.last() != arriving) {
+            route.clear()
+            return allRoutes
+        }
+
+        if (departing == arriving) {
+            isVisited[departing] = false
+            allRoutes.add(route.toList())
+            route.clear()
+            return allRoutes
+        }
+
+        val connectingCities: MutableSet<String> = try {
+            flightNetwork.adjacentNodes(departing)
         } catch (e: Exception) {
-            return routes
+            mutableSetOf()
         }
 
-        if (directRouteConnecting.isPresent) {
-            routes.add(listOf(directRouteConnecting.get()))
-        }
-
-        val connectingCities = flightNetwork.adjacentNodes(departing)
         for (connectingCity in connectingCities) {
-            val layoverConnectingCities = flightNetwork.adjacentNodes(connectingCity)
-            if (layoverConnectingCities.contains(arriving)) {
-                val route = ArrayList<String>()
-                val firstLeg = flightNetwork.edgeConnecting(departing, connectingCity)
-                val secondLeg = flightNetwork.edgeConnecting(connectingCity, arriving)
-                route.add(firstLeg.get())
-                route.add(secondLeg.get())
-                routes.add(route)
+            if (isVisited[connectingCity] == null || isVisited[connectingCity] == false) {
+                cityPath.add(connectingCity)
+                route.add(getRouteConnectingCities(cityPath))
+                findAllRoutesRecursively(connectingCity, arriving, isVisited, cityPath, route, maxLayovers)
+                cityPath.remove(connectingCity)
             }
         }
 
-        return routes
+        return allRoutes
     }
+
+    private fun getRouteConnectingCities(cityPath: MutableList<String>): String {
+        return flightNetwork.edgeConnecting(
+            cityPath.last(),
+            cityPath[cityPath.size - 2]
+        ).get()
+    }
+
+
 }
